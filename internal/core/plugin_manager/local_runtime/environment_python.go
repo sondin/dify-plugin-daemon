@@ -118,6 +118,8 @@ func (p *LocalPluginRuntime) InitPythonEnvironment() error {
 		args = append(args, "-i", p.pipMirrorUrl)
 	}
 
+	args = append(args, " --find-links=/app/storage/packages/packages ")
+
 	args = append(args, "-r", "requirements.txt")
 
 	if p.pipVerbose {
