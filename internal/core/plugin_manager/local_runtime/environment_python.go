@@ -118,7 +118,7 @@ func (p *LocalPluginRuntime) InitPythonEnvironment() error {
 		args = append(args, "-i", p.pipMirrorUrl)
 	}
 
-	args = append(args, " --find-links=/app/storage/packages/packages ")
+	args = append(args, "--no-index", "--find-links=/app/storage/packages/packages")
 
 	args = append(args, "-r", "requirements.txt")
 
@@ -133,6 +133,8 @@ func (p *LocalPluginRuntime) InitPythonEnvironment() error {
 	args = append([]string{"pip"}, args...)
 
 	virtualEnvPath := path.Join(p.State.WorkingPath, ".venv")
+
+	log.Info("cmd ===%s  %v", uvPath, args)
 	cmd = exec.CommandContext(ctx, uvPath, args...)
 	cmd.Env = append(cmd.Env, "VIRTUAL_ENV="+virtualEnvPath, "PATH="+os.Getenv("PATH"))
 	if p.HttpProxy != "" {

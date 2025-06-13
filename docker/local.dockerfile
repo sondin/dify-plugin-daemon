@@ -1,6 +1,6 @@
 FROM golang:1.23-alpine as builder
 
-ARG VERSION=0.0.8
+ARG VERSION=0.0.9
 
 # copy project
 COPY . /app
@@ -9,7 +9,7 @@ COPY . /app
 WORKDIR /app
 
 # using goproxy if you have network issues
-# ENV GOPROXY=https://goproxy.cn,direct
+ENV GOPROXY=https://goproxy.cn,direct
 
 # build
 RUN go build \
@@ -23,6 +23,10 @@ COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 FROM ubuntu:24.04
+
+# 设置阿里云Ubuntu源
+RUN sed -i 's|http://archive.ubuntu.com|http://mirrors.aliyun.com|g' /etc/apt/sources.list.d/ubuntu.sources && \
+    sed -i 's|http://security.ubuntu.com|http://mirrors.aliyun.com|g' /etc/apt/sources.list.d/ubuntu.sources
 
 COPY --from=builder /app/main /app/main
 COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
@@ -43,10 +47,10 @@ ENV TIKTOKEN_CACHE_DIR=/app/.tiktoken
 
 # Install dify_plugin to speedup the environment setup, test uv and preload tiktoken
 RUN mv /usr/lib/python3.12/EXTERNALLY-MANAGED /usr/lib/python3.12/EXTERNALLY-MANAGED.bk \
-    && python3 -m pip install uv \
-    && uv pip install --system dify_plugin \
-    && python3 -c "from uv._find_uv import find_uv_bin;print(find_uv_bin());" \
-    && python3 -c "import tiktoken; encodings = ['o200k_base', 'cl100k_base', 'p50k_base', 'r50k_base', 'p50k_edit', 'gpt2']; [tiktoken.get_encoding(encoding).special_tokens_set for encoding in encodings]"
+    && python3 -m pip install uv -i https://pypi.tuna.tsinghua.edu.cn/simple\
+    && uv pip install --system dify_plugin -i  https://pypi.tuna.tsinghua.edu.cn/simple
+    # && python3 -c "from uv._find_uv import find_uv_bin;print(find_uv_bin());" \
+    # && python3 -c "import tiktoken; encodings = ['o200k_base', 'cl100k_base', 'p50k_base', 'r50k_base', 'p50k_edit', 'gpt2']; [tiktoken.get_encoding(encoding).special_tokens_set for encoding in encodings]"
 
 ENV UV_PATH=/usr/local/bin/uv
 ENV PLATFORM=$PLATFORM
